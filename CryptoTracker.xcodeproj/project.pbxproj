@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EAE9095F2E58B9C6003CCA2D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EAE9095E2E58B9C6003CCA2D /* Kingfisher */; };
+		EAE909612E58B9E6003CCA2D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EAE909602E58B9E6003CCA2D /* Kingfisher */; };
+		EAE909632E58B9F1003CCA2D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EAE909622E58B9F1003CCA2D /* Kingfisher */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		EA48A11B2E58B4D2001C9EDC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAE9095F2E58B9C6003CCA2D /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAE909612E58B9E6003CCA2D /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAE909632E58B9F1003CCA2D /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +134,7 @@
 			);
 			name = CryptoTracker;
 			packageProductDependencies = (
+				EAE9095E2E58B9C6003CCA2D /* Kingfisher */,
 			);
 			productName = CryptoTracker;
 			productReference = EA48A1042E58B4D1001C9EDC /* CryptoTracker.app */;
@@ -148,6 +158,7 @@
 			);
 			name = CryptoTrackerTests;
 			packageProductDependencies = (
+				EAE909602E58B9E6003CCA2D /* Kingfisher */,
 			);
 			productName = CryptoTrackerTests;
 			productReference = EA48A11A2E58B4D2001C9EDC /* CryptoTrackerTests.xctest */;
@@ -171,6 +182,7 @@
 			);
 			name = CryptoTrackerUITests;
 			packageProductDependencies = (
+				EAE909622E58B9F1003CCA2D /* Kingfisher */,
 			);
 			productName = CryptoTrackerUITests;
 			productReference = EA48A1242E58B4D2001C9EDC /* CryptoTrackerUITests.xctest */;
@@ -208,6 +220,9 @@
 			);
 			mainGroup = EA48A0FB2E58B4D1001C9EDC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EA48A1382E58B600001C9EDC /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EA48A1052E58B4D1001C9EDC /* Products */;
 			projectDirPath = "";
@@ -293,9 +308,10 @@
 				INFOPLIST_FILE = CryptoTracker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -320,9 +336,10 @@
 				INFOPLIST_FILE = CryptoTracker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -563,6 +580,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EA48A1382E58B600001C9EDC /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EAE9095E2E58B9C6003CCA2D /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA48A1382E58B600001C9EDC /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		EAE909602E58B9E6003CCA2D /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA48A1382E58B600001C9EDC /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		EAE909622E58B9F1003CCA2D /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA48A1382E58B600001C9EDC /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EA48A0FC2E58B4D1001C9EDC /* Project object */;
 }
