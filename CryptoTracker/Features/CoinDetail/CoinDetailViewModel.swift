@@ -96,7 +96,8 @@ final class CoinDetailViewModel {
         let changeText: String
         let changeSign: Int
         if let pct = detail.priceChangePct24h {
-            changeText = Formatters.percent(pct)
+            let base = Formatters.percent(pct) // p.ej. "1.23%" o "-1.23%"
+            changeText = (pct > 0 && !base.hasPrefix("+")) ? "+" + base : base
             changeSign = pct == 0 ? 0 : (pct > 0 ? 1 : -1)
         } else {
             changeText = String(localized: "value.missing")

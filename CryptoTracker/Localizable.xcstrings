@@ -210,6 +210,17 @@
         }
       }
     },
+    "error.generic.data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was a problem loading more data."
+          }
+        }
+      }
+    },
     "errorstate.retry" : {
       "extractionState" : "manual",
       "localizations" : {

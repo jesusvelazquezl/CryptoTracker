@@ -21,7 +21,7 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
     private let refreshControl = UIRefreshControl()
     private var toast: ToastErrorPresenter!
 
-    // Empty state overlay (shown only when API returns OK but there are no coins)
+    // Empty/Error state overlay (reutilizada como vacío o error)
     private lazy var emptyView: EmptyStateView = {
         let v = EmptyStateView()
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -92,7 +92,7 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
 
         setupCollectionView()
 
-        // Empty overlay above the collectionView (same margins)
+        // Empty/Error overlay above the collectionView (same margins)
         view.addSubview(emptyView)
         NSLayoutConstraint.activate([
             emptyView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -149,9 +149,11 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
             switch state {
             case .idle:
                 break
+
             case .loading:
                 self.refreshControl.beginRefreshing()
                 self.hideEmptyList()
+
             case .loaded(let coins):
                 self.applySnapshot(coins, showLoading: false)
                 self.refreshControl.endRefreshing()
@@ -160,10 +162,30 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
                 } else {
                     self.hideEmptyList()
                 }
-            case .failed(let message):
+
+            case .failed(let rawMessage):
                 self.refreshControl.endRefreshing()
-                // Do not show empty on failures; empty is only for OK-but-empty responses
-                self.showError(message)
+
+                // Resolver tipo y mensaje de error para toasts y overlays
+                let (kind, userMessage) = self.resolveToast(from: rawMessage)
+
+                // Mostrar toast siempre
+                self.toast.show(message: userMessage)
+
+                // Si no hay datos cargados, mostrar overlay acorde a la casuística
+                if self.viewModel.coins.isEmpty {
+                    switch kind {
+                    case .rateLimited:
+                        // Casuística 1: límite de solicitudes -> vista de vacío + toast
+                        self.showEmptyList()
+                    case .offline, .message:
+                        // Casuística 2: error API distinto a 429 -> pantalla de error
+                        self.showErrorOverlay(userMessage)
+                    }
+                } else {
+                    // Con lista previa, no forzamos overlays; mantenemos la lista y el toast
+                    self.hideEmptyList()
+                }
             }
         }
 
@@ -228,23 +250,50 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
 
     // MARK: - Snapshot
 
+    /// Deduplica preservando el orden de aparición.
+    private func uniqueCoins(_ coins: [Coin]) -> [Coin] {
+        var seen = Set<Coin>()
+        var result: [Coin] = []
+        result.reserveCapacity(coins.count)
+        for c in coins {
+            if seen.insert(c).inserted {
+                result.append(c)
+            }
+        }
+        return result
+    }
+
     private func applySnapshot(_ items: [Coin], showLoading: Bool = false, animating: Bool = true) {
+        // 1) Asegurar que no hay duplicados para evitar "Duplicate identifiers"
+        let coins = uniqueCoins(items)
+
+        // 2) Construir la lista de identificadores (ListItem) y deduplicarla por si acaso
+        var list: [ListItem] = []
+        if !coins.isEmpty { list.append(.header) }
+        list.append(contentsOf: coins.map { ListItem.coin($0) })
+        if showLoading { list.append(.loading) }
+
+        var seen = Set<ListItem>()
+        let uniqueList = list.filter { seen.insert($0).inserted }
+
+        // 3) Aplicar snapshot con elementos únicos
         var snapshot = NSDiffableDataSourceSnapshot<Section, ListItem>()
         snapshot.appendSections([.main])
-        if !items.isEmpty { snapshot.appendItems([.header]) }
-        snapshot.appendItems(items.map { ListItem.coin($0) })
-        if showLoading { snapshot.appendItems([.loading]) }
-
+        snapshot.appendItems(uniqueList)
         dataSource.apply(snapshot, animatingDifferences: animating)
 
-        // Reconfigure ONLY the last visible cell (updates rounded corners after pagination)
+        // 4) Reconfigurar SOLO la última celda de coin visible (tras paginación) usando la lista única
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            let last = items.count - 1
-            guard last >= 0 else { return }
-            let uiIndexLast = last + 1 // +1 due to header at 0
 
-            let lastIndexPath = IndexPath(item: uiIndexLast, section: 0)
+            // Buscar el último índice de un .coin en uniqueList
+            guard let lastCoinPosition = uniqueList.lastIndex(where: {
+                if case .coin = $0 { return true } else { return false }
+            }) else {
+                return
+            }
+
+            let lastIndexPath = IndexPath(item: lastCoinPosition, section: 0)
             guard self.collectionView.indexPathsForVisibleItems.contains(lastIndexPath) else { return }
             guard let identifier = self.dataSource.itemIdentifier(for: lastIndexPath) else { return }
 
@@ -254,7 +303,7 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
         }
     }
 
-    // MARK: - Error Toasts
+    // MARK: - Error Toasts & Resolution
 
     private enum ToastErrorKind: Error {
         case rateLimited
@@ -262,28 +311,27 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
         case message(String)
     }
 
-    private func showError(_ error: ToastErrorKind) {
-        let userMessage: String
-        switch error {
-        case .rateLimited:
-            userMessage = "You’ve made too many requests. Please wait a few seconds and try again."
-        case .offline:
-            userMessage = "Looks like you’re offline."
-        case .message(let msg):
-            userMessage = msg.isEmpty ? "There was a problem loading more data." : msg
+    /// Resuelve el tipo de error y el mensaje de usuario a partir del mensaje crudo.
+    private func resolveToast(from raw: String) -> (ToastErrorKind, String) {
+        let lowered = raw.lowercased()
+        if raw.contains("429") {
+            return (.rateLimited, String(localized: "detail.error.rate_limited"))
+        } else if lowered.contains("offline")
+                    || lowered.contains("conexión")
+                    || lowered.contains("conexion")
+                    || lowered.contains("network")
+                    || lowered.contains("connection") {
+            return (.offline, String(localized: "detail.error.offline"))
+        } else {
+            return (.message(String(localized: "error.generic.data")),
+                    String(localized: "error.generic.data"))
         }
-        toast.show(message: userMessage)
     }
 
+    /// Mantiene compatibilidad con usos existentes (muestra toast únicamente).
     private func showError(_ message: String) {
-        let lowered = message.lowercased()
-        if message.contains("429") {
-            showError(.rateLimited)
-        } else if lowered.contains("offline") || lowered.contains("conexión") || lowered.contains("network") || lowered.contains("connection") {
-            showError(.offline)
-        } else {
-            showError(.message("There was a problem loading more data."))
-        }
+        let (_, userMessage) = resolveToast(from: message)
+        toast.show(message: userMessage)
     }
 
     // MARK: - Collection Delegate
@@ -302,11 +350,23 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
         Task { await viewModel.loadNextPageIfNeeded(currentIndex: coinIndex) }
     }
 
-    // MARK: - Empty State
+    // MARK: - Empty/Error State
 
     private func showEmptyList() {
         emptyView.configure(
             title: String(localized: "empty.no_results.title"),
+            subtitle: String(localized: "empty.no_results.subtitle")
+        )
+        emptyView.isHidden = false
+    }
+
+    /// Muestra overlay de error reutilizando EmptyStateView con un mensaje de error.
+    /// El título usa el mensaje de usuario resuelto (p.ej. rate limit, offline, genérico).
+    private func showErrorOverlay(_ message: String) {
+        emptyView.configure(
+            title: message,
+            // Reutilizamos el subtítulo genérico de “no resultados” si no hay uno específico.
+            // Si dispones de claves de localización específicas de error, cámbialas aquí.
             subtitle: String(localized: "empty.no_results.subtitle")
         )
         emptyView.isHidden = false
