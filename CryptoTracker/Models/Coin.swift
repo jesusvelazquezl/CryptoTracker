@@ -11,7 +11,7 @@ struct Coin: Hashable {
     let id: String
     let name: String
     let imageURL: URL?
-    let priceEUR: Double
+    let priceEUR: Double?
     let priceChangePct24h: Double?
     let symbol: String
 

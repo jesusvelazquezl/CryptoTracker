@@ -7,149 +7,137 @@
 
 import UIKit
 
-// El ViewController se encarga de la presentación de la UI.
-class SettingsSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, SettingsSheetViewModelDelegate {
-    
-    // Instancia del ViewModel.
+final class SettingsSheetViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, SettingsSheetViewModelDelegate {
+
+    // MARK: - State
     private let viewModel = SettingsSheetViewModel()
-    
-    // Crea un UITableView para mostrar las opciones.
+
+    // MARK: - UI
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    
-    // Un botón para cerrar la hoja.
+
+    /// Small caption above the table (minimal look)
+    private let sectionTitleLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Appearance"
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.textColor = .label
+        return label
+    }()
+
+    /// Close button (top-right)
     private lazy var closeButton: UIBarButtonItem = {
-        let button = UIBarButtonItem(systemItem: .close, primaryAction: UIAction { [weak self] _ in
-            self?.dismiss(animated: true, completion: nil)
-        })
+        let action = UIAction { [weak self] _ in self?.dismiss(animated: true) }
+        let button = UIBarButtonItem(systemItem: .close, primaryAction: action)
         return button
     }()
 
-    // Crea un UILabel para la sección de apariencia.
-    private let appearanceLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Apariencia"
-        label.font = .preferredFont(forTextStyle: .headline)
-        return label
-    }()
-    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Configura la vista y el ViewModel.
-        setupView()
+
+        setupNavigationBar()
+        setupViews()
+        setupConstraints()
         setupViewModel()
     }
-    
-    private func setupView() {
-        // Configura el título y el botón de cerrar.
+
+    // MARK: - Setup
+    private func setupNavigationBar() {
         title = "Settings"
+
         navigationItem.rightBarButtonItem = closeButton
-        
-        // Cambia el color de fondo de la vista principal.
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.tintColor = .label
+    }
+
+    private func setupViews() {
         view.backgroundColor = .systemGroupedBackground
-        
-        // El color del fondo de la tabla es el mismo que el de la vista principal.
+
         tableView.backgroundColor = .systemGroupedBackground
-        
-        // Configura la tabla.
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "themeCell")
-        
-        // Añade la etiqueta y la tabla a la vista.
-        view.addSubview(appearanceLabel)
-        view.addSubview(tableView)
-        
-        NSLayoutConstraint.activate([
-            // Restricciones para la etiqueta
-            appearanceLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            appearanceLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            appearanceLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            // Restricciones para la tabla
-            tableView.topAnchor.constraint(equalTo: appearanceLabel.bottomAnchor, constant: 0),
+        // Minimal cell style
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "themeCell")
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.sectionHeaderTopPadding = 0
+
+        view.addSubview(sectionTitleLabel)
+        view.addSubview(tableView)
+    }
+
+    private func setupConstraints() {
+        // Tight, consistent margins for a minimal look
+        NSLayoutConstraint.activate([
+            sectionTitleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 4),
+            sectionTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            sectionTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+
+            tableView.topAnchor.constraint(equalTo: sectionTitleLabel.bottomAnchor, constant: 0),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-    
+
     private func setupViewModel() {
-        // Asigna el ViewController como delegado del ViewModel.
         viewModel.delegate = self
     }
-    
-    // Llama a este método para cambiar el tema de la aplicación.
-    // Esto se puede llamar desde cualquier lugar de la app.
+
+    // MARK: - Theme
+    /// Apply the chosen theme to the whole app window.
     private func applyTheme(_ theme: AppTheme) {
         let window = UIApplication.shared.connectedScenes
-            .filter({ $0.activationState == .foregroundActive })
-            .map({ $0 as? UIWindowScene })
-            .compactMap({ $0 })
-            .first?.windows
-            .filter({ $0.isKeyWindow }).first
-        
-        // Cambia el estilo de la interfaz de usuario de la ventana.
-        switch theme {
-        case .system:
-            window?.overrideUserInterfaceStyle = .unspecified
-        case .light:
-            window?.overrideUserInterfaceStyle = .light
-        case .dark:
-            window?.overrideUserInterfaceStyle = .dark
-        }
+            .compactMap { $0 as? UIWindowScene }
+            .first(where: { $0.activationState == .foregroundActive })?
+            .windows
+            .first(where: { $0.isKeyWindow })
+
+        window?.overrideUserInterfaceStyle = theme.uiStyle
     }
-    
+
     // MARK: - UITableViewDataSource
-    
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    
+    func numberOfSections(in tableView: UITableView) -> Int { 1 }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.availableThemes.count
+        viewModel.availableThemes.count
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
         let cell = tableView.dequeueReusableCell(withIdentifier: "themeCell", for: indexPath)
-        
         let theme = viewModel.availableThemes[indexPath.row]
-        cell.textLabel?.text = theme.rawValue
-        
-        // Configura el accesorio para mostrar si el tema está seleccionado.
-        if viewModel.selectedTheme == theme {
-            cell.accessoryType = .checkmark
-        } else {
-            cell.accessoryType = .none
-        }
-        
+
+        // Minimal cell text
+        cell.textLabel?.text = theme.title
+        cell.textLabel?.font = .preferredFont(forTextStyle: .body)
+        cell.textLabel?.textColor = .label
+
+        // Show checkmark for selected theme
+        cell.accessoryType = (viewModel.selectedTheme == theme) ? .checkmark : .none
+        cell.selectionStyle = .default
+
         return cell
     }
-    
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        // Retorna nil para remover el título del encabezado del grupo de la tabla.
-        return nil
-    }
-    
+
     // MARK: - UITableViewDelegate
-    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        // Obtiene el tema seleccionado y lo actualiza en el ViewModel.
+        defer { tableView.deselectRow(at: indexPath, animated: true) }
+
+        // Update theme in ViewModel (persists + notifies delegate)
         let newTheme = viewModel.availableThemes[indexPath.row]
+        guard newTheme != viewModel.selectedTheme else { return }
+
         viewModel.selectedTheme = newTheme
-        
-        // Recarga la tabla para actualizar la marca de verificación.
+
+        // Refresh checkmarks (simple + robust)
         tableView.reloadData()
     }
-    
+
     // MARK: - SettingsSheetViewModelDelegate
-    
     func didUpdateTheme(_ theme: AppTheme) {
-        // Aplica el nuevo tema a la aplicación.
         applyTheme(theme)
     }
 }

@@ -8,32 +8,38 @@
 import UIKit
 
 final class EmptyStateView: UIView {
-    private let stack = UIStackView()
+
+    // MARK: - UI
+    private let contentStack = UIStackView()
     private let imageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
 
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setup()
+        setupViews()
     }
 
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupViews()
+    }
+
+    // MARK: - Public
     func configure(title: String, subtitle: String) {
         titleLabel.text = title
         subtitleLabel.text = subtitle
     }
 
-    private func setup() {
+    // MARK: - Private
+    private func setupViews() {
         backgroundColor = .clear
 
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.axis = .vertical
+        contentStack.alignment = .center
+        contentStack.spacing = 12
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         imageView.image = UIImage(systemName: "tray")
         imageView.preferredSymbolConfiguration = .init(pointSize: 44, weight: .regular)
@@ -50,13 +56,13 @@ final class EmptyStateView: UIView {
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
-        addSubview(stack)
-        [imageView, titleLabel, subtitleLabel].forEach { stack.addArrangedSubview($0) }
+        addSubview(contentStack)
+        [imageView, titleLabel, subtitleLabel].forEach { contentStack.addArrangedSubview($0) }
 
         NSLayoutConstraint.activate([
-            stack.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor),
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24)
+            contentStack.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24)
         ])
     }
 }

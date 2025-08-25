@@ -8,75 +8,83 @@
 import UIKit
 
 final class ErrorStateView: UIView {
+
+    // MARK: - Public
     var onRetry: (() -> Void)?
 
-    private let stack = UIStackView()
+    // MARK: - UI
+    private let contentStack = UIStackView()
     private let imageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let retryButton = UIButton(type: .system)
-    private let activity = UIActivityIndicatorView(style: .medium)
+    private let activityIndicator = UIActivityIndicatorView(style: .medium)
 
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setup()
+        setupViews()
     }
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setup()
+        setupViews()
     }
 
-    private func setup() {
+    // MARK: - Private
+    private func setupViews() {
         backgroundColor = .clear
 
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
+        contentStack.axis = .vertical
+        contentStack.alignment = .center
+        contentStack.spacing = 12
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
 
         imageView.image = UIImage(systemName: "wifi.exclamationmark")
         imageView.tintColor = .tertiaryLabel
         imageView.preferredSymbolConfiguration = .init(pointSize: 44, weight: .regular)
 
-        titleLabel.text = "No se pudo cargar"
+        titleLabel.text = "Couldn't load"
         titleLabel.font = .preferredFont(forTextStyle: .title2)
         titleLabel.textAlignment = .center
 
-        subtitleLabel.text = "Comprueba tu conexión y vuelve a intentarlo."
+        subtitleLabel.text = "Check your connection and try again."
         subtitleLabel.font = .preferredFont(forTextStyle: .body)
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
-        retryButton.setTitle("Reintentar", for: .normal)
+        retryButton.setTitle("Retry", for: .normal)
         retryButton.configuration = .filled()
-        retryButton.addTarget(self, action: #selector(retryTapped), for: .touchUpInside)
+        retryButton.addTarget(self, action: #selector(handleRetryTapped), for: .touchUpInside)
 
-        activity.hidesWhenStopped = true
+        activityIndicator.hidesWhenStopped = true
 
-        addSubview(stack)
-        [imageView, titleLabel, subtitleLabel, retryButton, activity].forEach { stack.addArrangedSubview($0) }
+        addSubview(contentStack)
+        [imageView, titleLabel, subtitleLabel, retryButton, activityIndicator].forEach { contentStack.addArrangedSubview($0) }
 
         NSLayoutConstraint.activate([
-            stack.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor),
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24)
+            contentStack.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24)
         ])
     }
 
+    // MARK: - Public
     func configure(title: String, subtitle: String) {
         titleLabel.text = title
         subtitleLabel.text = subtitle
     }
 
-    @objc private func retryTapped() {
-        retryButton.isEnabled = false
-        activity.startAnimating()
-        onRetry?()
+    func resetState() {
+        retryButton.isEnabled = true
+        activityIndicator.stopAnimating()
     }
 
-    func reset() {
-        retryButton.isEnabled = true
-        activity.stopAnimating()
+    // MARK: - Actions
+    @objc private func handleRetryTapped() {
+        retryButton.isEnabled = false
+        activityIndicator.startAnimating()
+        onRetry?()
     }
 }

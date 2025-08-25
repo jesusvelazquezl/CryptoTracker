@@ -27,7 +27,7 @@ final class CoinsListViewModel {
 
     // Callbacks
     var onStateChange: ((State) -> Void)?
-    /// Toggle for the loader footer cell (true = show, false = hide)
+    /// Toggle the loader footer cell (true = show, false = hide)
     var onPagingChange: ((Bool) -> Void)?
 
     init(repository: CoinRepository) { self.repository = repository }
@@ -53,8 +53,7 @@ final class CoinsListViewModel {
     @MainActor
     func refresh() async { await load() }
 
-    /// Call from VC when a given index is about to display (e.g., willDisplay at indexPath.item)
-    /// Triggers next page when user reaches the last 5 items (i.e., at item 95 of a 100-item page)
+    /// Trigger next page when nearing the end (e.g., when currentIndex reaches last 5 items)
     @MainActor
     func loadNextPageIfNeeded(currentIndex: Int) async {
         guard !isLoadingNextPage, !reachedEnd else { return }

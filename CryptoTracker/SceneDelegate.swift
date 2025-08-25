@@ -14,32 +14,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
-
         let window = UIWindow(windowScene: windowScene)
+
+        // Theme (single line using AppTheme.uiStyle)
+        let saved = UserDefaults.standard.string(forKey: "appTheme")
+        let theme = saved.flatMap(AppTheme.init(rawValue:)) ?? .system
+        window.overrideUserInterfaceStyle = theme.uiStyle
+
+        // Root navigation
         let nav = UINavigationController()
-        nav.navigationBar.prefersLargeTitles = true
+        nav.navigationBar.prefersLargeTitles = false
+        nav.navigationBar.tintColor = .label
 
-        if let savedThemeRawValue = UserDefaults.standard.string(forKey: "appTheme"),
-           let savedTheme = AppTheme(rawValue: savedThemeRawValue) {
-            
-            switch savedTheme {
-            case .system:
-                window.overrideUserInterfaceStyle = .unspecified
-            case .light:
-                window.overrideUserInterfaceStyle = .light
-            case .dark:
-                window.overrideUserInterfaceStyle = .dark
-            }
-        }
-
-        // Inyección de dependencias
+        // Dependencies
         let api = APIClient()
         let repo = CoinGeckoRepository(apiClient: api)
+
+        // Root list
         let listVM = CoinsListViewModel(repository: repo)
-        let listVC = CoinsListViewController(viewModel: listVM) { coin in
+        let listVC = CoinsListViewController(viewModel: listVM) { [weak nav] coin in
             let detailVM = CoinDetailViewModel(repository: repo, coinID: coin.id, initialCoin: coin)
             let detailVC = CoinDetailViewController(viewModel: detailVM)
-            nav.pushViewController(detailVC, animated: true)
+            nav?.pushViewController(detailVC, animated: true)
         }
 
         nav.viewControllers = [listVC]
