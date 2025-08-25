@@ -17,7 +17,7 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
     private var collectionView: UICollectionView!
     private lazy var dataSource = makeDataSource()
     private let refresh = UIRefreshControl()
-    private var activeToast: UIView?
+    private var toast: ToastErrorPresenter!
 
     private let viewModel: CoinsListViewModel
     private let onSelect: (Coin) -> Void
@@ -42,6 +42,7 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        toast = ToastErrorPresenter(hostView: view)
         title = "coingecko"
         navigationItem.largeTitleDisplayMode = .never
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -79,6 +80,11 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
         ])
         bind()
         Task { await viewModel.load() }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        title = "coingecko"
     }
 
     private func setupCollection() {
@@ -195,87 +201,44 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
             guard last >= 0 else { return }
             let uiIndexLast = last + 1 // +1 por el header en 0
 
-            let isLastVisible = self.collectionView.indexPathsForVisibleItems.contains {
-                $0.section == 0 && $0.item == uiIndexLast
-            }
-            guard isLastVisible else { return }
+            let lastIndexPath = IndexPath(item: uiIndexLast, section: 0)
+            guard self.collectionView.indexPathsForVisibleItems.contains(lastIndexPath) else { return }
+            guard let identifier = self.dataSource.itemIdentifier(for: lastIndexPath) else { return }
 
             var snap = self.dataSource.snapshot()
-            snap.reconfigureItems([.coin(items[last])])
+            snap.reconfigureItems([identifier])
             self.dataSource.apply(snap, animatingDifferences: false)
         }
     }
 
-    private func showError(_ message: String) {
-        // Evita múltiples toasts a la vez
-        if let toast = activeToast, toast.superview != nil { return }
-
-        var userMessage = ""
-        if message.contains("429") {
-            userMessage = "Has hecho demasiadas peticiones en poco tiempo. Espera unos segundos y vuelve a intentarlo."
-        } else if message.localizedCaseInsensitiveContains("offline") || message.localizedCaseInsensitiveContains("conexión") {
-            userMessage = "Parece que no tienes conexión a internet."
-        } else {
-            userMessage = "Ocurrió un problema al cargar más datos."
-        }
-
-        // Toast container
-        let toast = UIView()
-        toast.backgroundColor = UIColor.systemBackground
-        toast.layer.cornerRadius = 12
-        toast.layer.cornerCurve = .continuous
-        toast.translatesAutoresizingMaskIntoConstraints = false
-
-        // Label
-        let label = UILabel()
-        label.text = userMessage
-        label.font = .preferredFont(forTextStyle: .subheadline)
-        label.textColor = .label
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-
-        // Close button
-        let closeButton = UIButton(type: .system)
-        closeButton.setTitle("✕", for: .normal)
-        closeButton.setTitleColor(.secondaryLabel, for: .normal)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.addTarget(self, action: #selector(dismissToast(_:)), for: .touchUpInside)
-
-        toast.addSubview(label)
-        toast.addSubview(closeButton)
-
-        view.addSubview(toast)
-        let safe = view.safeAreaLayoutGuide
-        NSLayoutConstraint.activate([
-            toast.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-            toast.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
-            toast.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -20),
-
-            label.leadingAnchor.constraint(equalTo: toast.leadingAnchor, constant: 12),
-            label.topAnchor.constraint(equalTo: toast.topAnchor, constant: 12),
-            label.bottomAnchor.constraint(equalTo: toast.bottomAnchor, constant: -12),
-
-            closeButton.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 8),
-            closeButton.trailingAnchor.constraint(equalTo: toast.trailingAnchor, constant: -8),
-            closeButton.centerYAnchor.constraint(equalTo: label.centerYAnchor)
-        ])
-
-        self.activeToast = toast
-
-        // Initial state (hidden)
-        toast.alpha = 0
-        UIView.animate(withDuration: 0.25) {
-            toast.alpha = 1
-        }
+    // MARK: - Error Toasts
+    private enum ToastErrorKind: Error {
+        case rateLimited
+        case offline
+        case message(String)
     }
 
-    @objc private func dismissToast(_ sender: UIButton) {
-        guard let toast = sender.superview else { return }
-        UIView.animate(withDuration: 0.25, animations: {
-            toast.alpha = 0
-        }) { _ in
-            toast.removeFromSuperview()
-            self.activeToast = nil
+    private func showError(_ error: ToastErrorKind) {
+        let userMessage: String
+        switch error {
+        case .rateLimited:
+            userMessage = "Has hecho demasiadas peticiones en poco tiempo. Espera unos segundos y vuelve a intentarlo."
+        case .offline:
+            userMessage = "Parece que no tienes conexión a internet."
+        case .message(let msg):
+            userMessage = msg.isEmpty ? "Ocurrió un problema al cargar más datos." : msg
+        }
+        toast.show(message: userMessage)
+    }
+
+    private func showError(_ message: String) {
+        let lowered = message.lowercased()
+        if message.contains("429") {
+            showError(.rateLimited)
+        } else if lowered.contains("offline") || lowered.contains("conexión") || lowered.contains("network") {
+            showError(.offline)
+        } else {
+            showError(.message("Ocurrió un problema al cargar más datos."))
         }
     }
 

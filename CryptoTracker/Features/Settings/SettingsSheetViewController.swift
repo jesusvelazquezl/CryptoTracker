@@ -69,7 +69,7 @@ class SettingsSheetViewController: UIViewController, UITableViewDataSource, UITa
             appearanceLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
             // Restricciones para la tabla
-            tableView.topAnchor.constraint(equalTo: appearanceLabel.bottomAnchor, constant: 10),
+            tableView.topAnchor.constraint(equalTo: appearanceLabel.bottomAnchor, constant: 0),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
