@@ -21,7 +21,7 @@ final class HeaderCollectionCell: UICollectionViewCell {
 
     private let subtitleLabel: UILabel = {
         let l = UILabel()
-        l.text = "powered by CoinGecko"
+        l.text = String(localized: "header.powered_by")
         l.textAlignment = .center
         l.font = .preferredFont(forTextStyle: .subheadline)
         l.textColor = .secondaryLabel
@@ -72,11 +72,12 @@ final class HeaderCollectionCell: UICollectionViewCell {
         isAccessibilityElement = false
         headerImageView.isAccessibilityElement = false
         subtitleLabel.isAccessibilityElement = true
-        subtitleLabel.accessibilityLabel = "Powered by CoinGecko"
+        subtitleLabel.accessibilityLabel = String(localized: "header.powered_by.accessibility")
     }
 
     // MARK: - API
-    func configure(imageName: String = "coingecko_header", subtitle: String = "powered by CoinGecko") {
+    func configure(imageName: String = "coingecko_header",
+                   subtitle: String = String(localized: "header.powered_by")) {
         headerImageView.image = UIImage(named: imageName)
         subtitleLabel.text = subtitle
         subtitleLabel.accessibilityLabel = subtitle

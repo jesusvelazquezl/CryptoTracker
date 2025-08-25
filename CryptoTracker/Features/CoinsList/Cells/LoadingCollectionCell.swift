@@ -31,7 +31,7 @@ final class LoadingCollectionCell: UICollectionViewCell {
         // Accessibility
         isAccessibilityElement = true
         accessibilityTraits.insert(.updatesFrequently)
-        accessibilityLabel = "Loading"
+        accessibilityLabel = String(localized: "loadingcell.label")
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -39,12 +39,12 @@ final class LoadingCollectionCell: UICollectionViewCell {
     // MARK: - API
     func startAnimating() {
         activityIndicator.startAnimating()
-        accessibilityValue = "In progress"
+        accessibilityValue = String(localized: "loadingcell.value.in_progress")
     }
 
     func stopAnimating() {
         activityIndicator.stopAnimating()
-        accessibilityValue = "Stopped"
+        accessibilityValue = String(localized: "loadingcell.value.stopped")
     }
 
     // MARK: - Reuse

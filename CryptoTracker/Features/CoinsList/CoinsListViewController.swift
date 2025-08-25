@@ -305,7 +305,10 @@ final class CoinsListViewController: UIViewController, UICollectionViewDelegate 
     // MARK: - Empty State
 
     private func showEmptyList() {
-        emptyView.configure(title: "No Results", subtitle: "There’s nothing to show right now.")
+        emptyView.configure(
+            title: String(localized: "empty.no_results.title"),
+            subtitle: String(localized: "empty.no_results.subtitle")
+        )
         emptyView.isHidden = false
     }
 
