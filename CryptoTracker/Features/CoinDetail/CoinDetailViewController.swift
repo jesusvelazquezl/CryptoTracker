@@ -287,9 +287,12 @@ final class CoinDetailViewController: UIViewController {
         // Stats mapping in the same order provided by the ViewModel
         if ui.stats.indices.contains(0) { priceLabel.text = ui.stats[0].value }
         if ui.stats.indices.contains(1) {
-            changeLabel.text = ui.stats[1].value
-            let sign = ui.stats[1].changeSign
-            changeLabel.textColor = sign == 0 ? .secondaryLabel : (sign > 0 ? .systemGreen : .systemRed)
+            let stat = ui.stats[1]
+            changeLabel.text = stat.value
+            changeLabel.textColor =
+                stat.changeSign > 0 ? .systemGreen :
+                stat.changeSign < 0 ? .systemRed :
+                .secondaryLabel
         }
         if ui.stats.indices.contains(2) { marketCapLabel.text = ui.stats[2].value }
         if ui.stats.indices.contains(3) { rangeLabel.text = ui.stats[3].value }
