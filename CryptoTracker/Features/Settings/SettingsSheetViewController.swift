@@ -19,7 +19,7 @@ final class SettingsSheetViewController: UIViewController, UITableViewDataSource
     private let sectionTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Appearance"
+        label.text = String(localized: "settings.appearance.header")
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.textColor = .label
         return label
@@ -44,7 +44,7 @@ final class SettingsSheetViewController: UIViewController, UITableViewDataSource
 
     // MARK: - Setup
     private func setupNavigationBar() {
-        title = "Settings"
+        title = String(localized: "settings.title")
 
         navigationItem.rightBarButtonItem = closeButton
         navigationController?.navigationBar.isTranslucent = true

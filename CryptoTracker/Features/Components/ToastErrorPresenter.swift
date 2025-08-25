@@ -102,7 +102,7 @@ final class ToastErrorPresenter {
         closeButton.setTitleColor(.secondaryLabel, for: .normal)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.addTarget(self, action: #selector(dismissToast(_:)), for: .touchUpInside)
-        closeButton.accessibilityLabel = "Close"
+        closeButton.accessibilityLabel = String(localized: "close")
 
         toast.addSubview(label)
         toast.addSubview(closeButton)

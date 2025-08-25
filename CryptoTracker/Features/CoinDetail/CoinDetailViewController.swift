@@ -182,12 +182,12 @@ final class CoinDetailViewController: UIViewController {
         }
 
         // Titles
-        nameTitleLabel.text = "Name"
-        symbolTitleLabel.text = "Symbol"
-        priceTitleLabel.text = "Price"
-        changeTitleLabel.text = "24h Change"
-        marketCapTitleLabel.text = "Market Cap"
-        rangeTitleLabel.text = "24h Range"
+        nameTitleLabel.text = String(localized: "detail.name.title")
+        symbolTitleLabel.text = String(localized: "detail.symbol.title")
+        priceTitleLabel.text = String(localized: "detail.price.title")
+        changeTitleLabel.text = String(localized: "detail.change24h.title")
+        marketCapTitleLabel.text = String(localized: "detail.marketcap.title")
+        rangeTitleLabel.text = String(localized: "detail.range24h.title")
 
         // Rows
         let nameRow = makeRow(titleLabel: nameTitleLabel, valueView: nameScrollView)
@@ -215,7 +215,7 @@ final class CoinDetailViewController: UIViewController {
         descriptionLabel.textColor = .label
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        toggleDescriptionButton.setTitle("Show more", for: .normal)
+        toggleDescriptionButton.setTitle(String(localized: "detail.description.show_more"), for: .normal)
         toggleDescriptionButton.addTarget(self, action: #selector(toggleDescriptionExpansion), for: .touchUpInside)
         toggleDescriptionButton.translatesAutoresizingMaskIntoConstraints = false
 
@@ -310,7 +310,7 @@ final class CoinDetailViewController: UIViewController {
             descriptionLabel.text = text
             isDescriptionExpanded = false
             descriptionLabel.numberOfLines = 10
-            toggleDescriptionButton.setTitle("Show more", for: .normal)
+            toggleDescriptionButton.setTitle(String(localized: "detail.description.show_more"), for: .normal)
         } else {
             descriptionCard.isHidden = true
             descriptionLabel.text = nil
@@ -326,7 +326,12 @@ final class CoinDetailViewController: UIViewController {
     @objc private func toggleDescriptionExpansion() {
         isDescriptionExpanded.toggle()
         descriptionLabel.numberOfLines = isDescriptionExpanded ? 0 : 10
-        toggleDescriptionButton.setTitle(isDescriptionExpanded ? "Show less" : "Show more", for: .normal)
+        toggleDescriptionButton.setTitle(
+            isDescriptionExpanded
+              ? String(localized: "detail.description.show_less")
+              : String(localized: "detail.description.show_more"),
+            for: .normal
+        )
         UIView.animate(withDuration: 0.25) { self.view.layoutIfNeeded() }
     }
 
@@ -378,11 +383,11 @@ final class CoinDetailViewController: UIViewController {
         let message: String
         switch error {
         case .rateLimited:
-            message = "You’ve made too many requests. Please wait a few seconds and try again."
+            message = String(localized: "detail.error.rate_limited")
         case .offline:
-            message = "Looks like you’re offline."
+            message = String(localized: "detail.error.offline")
         case .message(let msg):
-            message = msg.isEmpty ? "There was a problem loading the data." : msg
+            message = msg.isEmpty ? String(localized: "detail.error.generic") : msg
         }
         toast.show(message: message)
     }
@@ -394,7 +399,7 @@ final class CoinDetailViewController: UIViewController {
         } else if lowered.contains("offline") || lowered.contains("connection") || lowered.contains("network") || lowered.contains("conexión") {
             showError(.offline)
         } else {
-            showError(.message("There was a problem loading the data."))
+            showError(.message(String(localized: "detail.error.generic")))
         }
     }
 }

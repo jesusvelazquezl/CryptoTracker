@@ -43,20 +43,22 @@ final class ErrorStateView: UIView {
         imageView.image = UIImage(systemName: "wifi.exclamationmark")
         imageView.tintColor = .tertiaryLabel
         imageView.preferredSymbolConfiguration = .init(pointSize: 44, weight: .regular)
+        imageView.isAccessibilityElement = false
 
-        titleLabel.text = "Couldn't load"
+        titleLabel.text = String(localized: "errorstate.title")
         titleLabel.font = .preferredFont(forTextStyle: .title2)
         titleLabel.textAlignment = .center
 
-        subtitleLabel.text = "Check your connection and try again."
+        subtitleLabel.text = String(localized: "errorstate.subtitle")
         subtitleLabel.font = .preferredFont(forTextStyle: .body)
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
-        retryButton.setTitle("Retry", for: .normal)
+        retryButton.setTitle(String(localized: "errorstate.retry"), for: .normal)
         retryButton.configuration = .filled()
         retryButton.addTarget(self, action: #selector(handleRetryTapped), for: .touchUpInside)
+        retryButton.accessibilityHint = String(localized: "errorstate.retry.hint")
 
         activityIndicator.hidesWhenStopped = true
 

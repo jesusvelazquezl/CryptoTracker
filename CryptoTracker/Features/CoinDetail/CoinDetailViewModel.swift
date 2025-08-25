@@ -67,10 +67,17 @@ final class CoinDetailViewModel {
         return nf.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
     }
 
+    private lazy var eurSymbol: String = {
+        let nf = NumberFormatter()
+        nf.numberStyle = .currency
+        nf.currencyCode = "EUR"
+        return nf.currencySymbol ?? "€"
+    }()
+
     private func formatCurrencyEURAbbrev(_ value: Double) -> String {
-        let (v, s) = abbreviate(value)
+        let (v, suffix) = abbreviate(value)
         let formatted = formatNumber(v)
-        return "€" + formatted + s
+        return eurSymbol + formatted + suffix
     }
 
     // MARK: - UI Model Builder
@@ -81,7 +88,7 @@ final class CoinDetailViewModel {
 
         // Price (never abbreviated)
         let priceText: String = {
-            guard let price = detail.priceEUR else { return "—" }
+            guard let price = detail.priceEUR else { return String(localized: "value.missing") }
             return Formatters.currencyEUR(price)
         }()
 
@@ -92,29 +99,30 @@ final class CoinDetailViewModel {
             changeText = Formatters.percent(pct)
             changeSign = pct == 0 ? 0 : (pct > 0 ? 1 : -1)
         } else {
-            changeText = "—"
+            changeText = String(localized: "value.missing")
             changeSign = 0
         }
 
         // Market cap (abbreviated)
         let marketCapText: String = {
-            guard let mc = detail.marketCapEUR else { return "—" }
+            guard let mc = detail.marketCapEUR else { return String(localized: "value.missing") }
             return formatCurrencyEURAbbrev(mc)
         }()
 
         // 24h range (abbreviate only if >= 1_000)
         let rangeText: String = {
-            guard let low = detail.low24hEUR, let high = detail.high24hEUR else { return "—" }
+            guard let low = detail.low24hEUR, let high = detail.high24hEUR else { return String(localized: "value.missing") }
             let lowStr  = abs(low)  >= 1_000 ? formatCurrencyEURAbbrev(low)  : Formatters.currencyEUR(low)
             let highStr = abs(high) >= 1_000 ? formatCurrencyEURAbbrev(high) : Formatters.currencyEUR(high)
-            return "\(lowStr) – \(highStr)"
+            let sep = String(localized: "detail.range.separator")
+            return "\(lowStr)\(sep)\(highStr)"
         }()
 
         let stats: [CoinDetailUIModel.Stat] = [
-            .init(title: "Price",        value: priceText,    changeSign: 0),
-            .init(title: "24h Change",   value: changeText,   changeSign: changeSign),
-            .init(title: "Market Cap",   value: marketCapText, changeSign: 0),
-            .init(title: "24h Range",    value: rangeText,    changeSign: 0)
+            .init(title: String(localized: "detail.stat.price.title"),       value: priceText,     changeSign: 0),
+            .init(title: String(localized: "detail.stat.change24h.title"),   value: changeText,    changeSign: changeSign),
+            .init(title: String(localized: "detail.stat.marketcap.title"),   value: marketCapText, changeSign: 0),
+            .init(title: String(localized: "detail.stat.range24h.title"),    value: rangeText,     changeSign: 0)
         ]
 
         let desc = detail.description?.trimmingCharacters(in: .whitespacesAndNewlines)
