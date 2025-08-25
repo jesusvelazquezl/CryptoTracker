@@ -11,7 +11,7 @@ import Kingfisher
 final class CoinListCell: UICollectionViewCell {
     static let reuseID = "CoinListCell"
 
-    // MARK: UI
+    // MARK: - UI
     private let iconView: UIImageView = {
         let v = UIImageView()
         v.contentMode = .scaleAspectFill
@@ -24,7 +24,7 @@ final class CoinListCell: UICollectionViewCell {
 
     private let nameLabel: UILabel = {
         let l = UILabel()
-        l.font = .preferredFont(forTextStyle: .headline)      // más grande
+        l.font = .preferredFont(forTextStyle: .headline) // larger
         l.adjustsFontForContentSizeCategory = true
         l.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return l
@@ -32,7 +32,7 @@ final class CoinListCell: UICollectionViewCell {
 
     private let symbolLabel: UILabel = {
         let l = UILabel()
-        l.font = .preferredFont(forTextStyle: .subheadline)   // más pequeño
+        l.font = .preferredFont(forTextStyle: .subheadline) // smaller
         l.textColor = .secondaryLabel
         l.adjustsFontForContentSizeCategory = true
         return l
@@ -40,7 +40,7 @@ final class CoinListCell: UICollectionViewCell {
 
     private let percentLabel: UILabel = {
         let l = UILabel()
-        // % con tipografía más marcada (como tu referencia)
+        // Emphasized percentage (semibold)
         let base = UIFont.preferredFont(forTextStyle: .subheadline)
         l.font = UIFont.systemFont(ofSize: base.pointSize, weight: .semibold)
         l.textAlignment = .right
@@ -50,7 +50,7 @@ final class CoinListCell: UICollectionViewCell {
 
     private let priceLabel: UILabel = {
         let l = UILabel()
-        l.font = .preferredFont(forTextStyle: .footnote)      // más pequeño que el %
+        l.font = .preferredFont(forTextStyle: .footnote) // smaller than %
         l.textColor = .secondaryLabel
         l.textAlignment = .right
         l.adjustsFontForContentSizeCategory = true
@@ -73,14 +73,16 @@ final class CoinListCell: UICollectionViewCell {
         return v
     }()
 
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        setupViews()
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) not implemented") }
 
-    private func setupUI() {
-        // Usamos contentView; compatible con UICollectionLayoutListConfiguration
+    // MARK: - Setup
+    private func setupViews() {
+        // Use contentView; compatible with UICollectionLayoutListConfiguration
         contentView.preservesSuperviewLayoutMargins = true
         preservesSuperviewLayoutMargins = true
 
@@ -128,6 +130,7 @@ final class CoinListCell: UICollectionViewCell {
         ])
     }
 
+    // MARK: - Configure
     struct ViewData {
         let iconURL: URL?
         let name: String
@@ -137,14 +140,13 @@ final class CoinListCell: UICollectionViewCell {
     }
 
     func configure(coin: Coin) {
-        // Adapta estos accesos a tu modelo Coin
         let url = coin.imageURL
         let name = coin.name
         let symbol = coin.symbol.uppercased()
         let price = coin.priceEUR
         let pct = coin.priceChangePct24h
 
-        // Icono
+        // Icon
         if let u = url {
             iconView.kf.setImage(with: u, placeholder: UIImage(systemName: "bitcoinsign.circle"))
         } else {
@@ -154,9 +156,9 @@ final class CoinListCell: UICollectionViewCell {
         nameLabel.text = name
         symbolLabel.text = symbol
 
-        // ▲/▼/◆ + color (sin +/−)
+        // ▲/▼/◆ + color (no +/-)
         if let p = pct {
-            // coin.priceChangePct24h ya viene en porcentaje (ej.: 3.45 => 3,45%)
+            // p is already in percent units (e.g., 3.45 => 3.45%)
             let absPct = abs(p)
             let arrow: String
             let color: UIColor
@@ -165,7 +167,7 @@ final class CoinListCell: UICollectionViewCell {
             } else if p < 0 {
                 arrow = "▼"; color = .systemRed
             } else {
-                arrow = "◆"; color = .secondaryLabel // sugerencia neutral
+                arrow = "◆"; color = .secondaryLabel // neutral
             }
             let pctStr = Self.percentFormatter.string(from: absPct as NSNumber) ?? String(format: "%.2f", absPct)
             percentLabel.text = "\(arrow) \(pctStr)%"
@@ -175,14 +177,22 @@ final class CoinListCell: UICollectionViewCell {
             percentLabel.textColor = .secondaryLabel
         }
 
-        priceLabel.text = "€" + (Self.currencyFormatter.string(from: price as NSNumber) ?? "—")
+        // Price (nil-safe)
+        if let price {
+            let formatted = Self.currencyFormatter.string(from: NSNumber(value: price)) ?? String(format: "%.2f", price)
+            priceLabel.text = "€\(formatted)"
+        } else {
+            priceLabel.text = "—"
+        }
 
-        // Accesibilidad
+        // Accessibility
         isAccessibilityElement = true
-        accessibilityLabel = "\(name) \(symbol), cambio 24h \(percentLabel.text ?? ""), precio \(priceLabel.text ?? "")"
+        let pctText = percentLabel.text ?? ""
+        let priceText = priceLabel.text ?? ""
+        accessibilityLabel = "\(name) \(symbol), 24h change \(pctText), price \(priceText)"
     }
 
-    // MARK: Formatters
+    // MARK: - Formatters
     private static let currencyFormatter: NumberFormatter = {
         let f = NumberFormatter()
         f.numberStyle = .decimal
@@ -202,7 +212,6 @@ final class CoinListCell: UICollectionViewCell {
     private func updateCornerMaskForPosition() {
         guard let collectionView = findCollectionView(),
               let indexPath = collectionView.indexPath(for: self) else {
-            // No rounding by default if we can't determine position
             cardView.layer.maskedCorners = []
             return
         }
@@ -213,7 +222,7 @@ final class CoinListCell: UICollectionViewCell {
         let isFirstCoin = indexPath.item == 1
 
         // Determine last coin index. If the very last item is a loading cell, the last coin is at (itemsCount - 2),
-        // otherwise it's at (itemsCount - 1). We infer the loading cell by checking the class of the last visible cell.
+        // otherwise it's at (itemsCount - 1).
         var lastCoinIndex = max(1, itemsCount - 1)
         if itemsCount >= 2 {
             let lastIndexPath = IndexPath(item: itemsCount - 1, section: indexPath.section)
@@ -237,9 +246,7 @@ final class CoinListCell: UICollectionViewCell {
 
     private func findCollectionView() -> UICollectionView? {
         var v: UIView? = superview
-        while let current = v, !(current is UICollectionView) {
-            v = current.superview
-        }
+        while let current = v, !(current is UICollectionView) { v = current.superview }
         return v as? UICollectionView
     }
 
@@ -280,9 +287,13 @@ final class CoinListCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Reset masked corners; will be recalculated on next layout pass
-        cardView.layer.maskedCorners = []
+        cardView.layer.maskedCorners = []  // recalculated on next layout pass
         cardView.transform = .identity
         cardView.alpha = 1.0
+        iconView.image = nil
+        nameLabel.text = nil
+        symbolLabel.text = nil
+        percentLabel.text = nil
+        priceLabel.text = nil
     }
 }

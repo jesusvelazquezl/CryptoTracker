@@ -8,24 +8,48 @@
 import UIKit
 
 final class LoadingCollectionCell: UICollectionViewCell {
-    static let reuseID = "LoadingCollectionCell"
-    private let spinner = UIActivityIndicatorView(style: .medium)
+    static let reuseIdentifier = "LoadingCollectionCell"
 
+    // MARK: - UI
+    private let activityIndicator = UIActivityIndicatorView(style: .medium)
+
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
+
         var bg = UIBackgroundConfiguration.listPlainCell()
         bg.backgroundColor = .clear
         backgroundConfiguration = bg
 
-        contentView.addSubview(spinner)
-        spinner.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(activityIndicator)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            spinner.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            spinner.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+            activityIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
+
+        // Accessibility
+        isAccessibilityElement = true
+        accessibilityTraits.insert(.updatesFrequently)
+        accessibilityLabel = "Loading"
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func startAnimating() { spinner.startAnimating() }
+    // MARK: - API
+    func startAnimating() {
+        activityIndicator.startAnimating()
+        accessibilityValue = "In progress"
+    }
+
+    func stopAnimating() {
+        activityIndicator.stopAnimating()
+        accessibilityValue = "Stopped"
+    }
+
+    // MARK: - Reuse
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        stopAnimating()
+    }
 }

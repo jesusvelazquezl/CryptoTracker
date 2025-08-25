@@ -7,60 +7,58 @@
 
 import UIKit
 
-// Define un enum para los diferentes temas de la aplicación.
-// 'system' es el valor por defecto.
+/// App-wide theme options. `system` is the default.
 enum AppTheme: String, CaseIterable {
     case system
     case light
     case dark
-    
+
+    /// Display title for UI.
     var title: String {
         switch self {
-        case .system: return "Sistema"
-        case .light: return "Claro"
-        case .dark: return "Oscuro"
+        case .system: return "System"
+        case .light:  return "Light"
+        case .dark:   return "Dark"
         }
     }
-    
+
+    /// Corresponding UI style for the app window.
     var uiStyle: UIUserInterfaceStyle {
         switch self {
         case .system: return .unspecified
-        case .light: return .light
-        case .dark: return .dark
+        case .light:  return .light
+        case .dark:   return .dark
         }
     }
 }
 
-// Define un protocolo para que el ViewModel se comunique con el ViewController.
+/// Delegate to notify UI about theme updates.
 protocol SettingsSheetViewModelDelegate: AnyObject {
     func didUpdateTheme(_ theme: AppTheme)
 }
 
-// El ViewModel gestiona la lógica de negocio y el estado de la vista.
-class SettingsSheetViewModel {
-    
-    // Delega las actualizaciones al ViewController.
+/// Handles settings business logic and state.
+final class SettingsSheetViewModel {
+
+    // MARK: - Delegate
     weak var delegate: SettingsSheetViewModelDelegate?
-    
-    // Almacena el tema actualmente seleccionado.
+
+    // MARK: - Theme State
+    /// Current selected theme, persisted in UserDefaults.
     var selectedTheme: AppTheme {
-        // Lee el valor del tema desde UserDefaults.
         get {
-            if let rawValue = UserDefaults.standard.string(forKey: "appTheme"),
-               let theme = AppTheme(rawValue: rawValue) {
+            if let raw = UserDefaults.standard.string(forKey: "appTheme"),
+               let theme = AppTheme(rawValue: raw) {
                 return theme
             }
-            return .system // Valor por defecto si no hay nada guardado.
+            return .system
         }
-        // Guarda el nuevo tema en UserDefaults y notifica al delegado.
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: "appTheme")
             delegate?.didUpdateTheme(newValue)
         }
     }
-    
-    // Proporciona una lista de todos los temas disponibles.
-    var availableThemes: [AppTheme] {
-        return AppTheme.allCases
-    }
+
+    /// All available themes.
+    var availableThemes: [AppTheme] { AppTheme.allCases }
 }
