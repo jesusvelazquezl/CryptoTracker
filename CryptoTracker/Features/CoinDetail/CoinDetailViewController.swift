@@ -82,6 +82,12 @@ final class CoinDetailViewController: UIViewController {
         navigationController?.navigationBar.topItem?.backButtonDisplayMode = .minimal
         navigationItem.largeTitleDisplayMode = .never
         navigationController?.navigationBar.prefersLargeTitles = false
+
+        // Accessibility: explicit label for website button
+        if let barButton = navigationItem.rightBarButtonItem {
+            barButton.accessibilityLabel = String(localized: "detail.accessibility.open_website")
+            barButton.accessibilityHint = String(localized: "detail.accessibility.opens_external_browser")
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -105,12 +111,20 @@ final class CoinDetailViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .tertiaryLabel
         imageView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        // Accessibility for image
+        imageView.isAccessibilityElement = true
+        imageView.accessibilityTraits.insert(.image)
+        imageView.accessibilityLabel = String(localized: "detail.accessibility.logo")
 
         // Name marquee
         nameScrollView.showsHorizontalScrollIndicator = false
         nameScrollView.showsVerticalScrollIndicator = false
         nameScrollView.isScrollEnabled = false
         nameScrollView.translatesAutoresizingMaskIntoConstraints = false
+        // Accessibility: expose only the label, not the scroll container
+        nameScrollView.isAccessibilityElement = false
+        nameLabel.isAccessibilityElement = true
+        nameLabel.accessibilityTraits.insert(.header)
 
         nameLabel.font = .preferredFont(forTextStyle: .headline)
         nameLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -178,6 +192,18 @@ final class CoinDetailViewController: UIViewController {
             row.alignment = .firstBaseline
             row.distribution = .fill
             row.spacing = 4 // fixed gap between title and value
+            // Accessibility: hide title from VO and assign its meaning to the value
+            titleLabel.isAccessibilityElement = false
+            if let v = valueView as? UILabel {
+                v.isAccessibilityElement = true
+                v.accessibilityLabel = titleLabel.text
+            } else if let v = valueView as? UIScrollView {
+                v.isAccessibilityElement = false
+                // the nested label handles accessibility (e.g., nameLabel)
+            } else {
+                valueView.isAccessibilityElement = true
+                valueView.accessibilityLabel = titleLabel.text
+            }
             return row
         }
 
@@ -218,6 +244,8 @@ final class CoinDetailViewController: UIViewController {
         toggleDescriptionButton.setTitle(String(localized: "detail.description.show_more"), for: .normal)
         toggleDescriptionButton.addTarget(self, action: #selector(toggleDescriptionExpansion), for: .touchUpInside)
         toggleDescriptionButton.translatesAutoresizingMaskIntoConstraints = false
+        // Accessibility for description toggle
+        toggleDescriptionButton.accessibilityHint = String(localized: "detail.accessibility.toggle_description_hint")
 
         let descriptionStack = UIStackView(arrangedSubviews: [descriptionLabel, toggleDescriptionButton])
         descriptionStack.axis = .vertical
@@ -277,6 +305,20 @@ final class CoinDetailViewController: UIViewController {
         symbolLabel.text = ui.symbol
         view.layoutIfNeeded()
         updateNameMarqueeIfNeeded()
+        // Accessibility: enrich stats for VoiceOver
+        if ui.stats.indices.contains(0) { // price
+            priceLabel.accessibilityValue = ui.stats[0].value
+        }
+        if ui.stats.indices.contains(1) {
+            let stat = ui.stats[1]
+            changeLabel.accessibilityValue = stat.value
+        }
+        if ui.stats.indices.contains(2) {
+            marketCapLabel.accessibilityValue = ui.stats[2].value
+        }
+        if ui.stats.indices.contains(3) {
+            rangeLabel.accessibilityValue = ui.stats[3].value
+        }
 
         if let url = ui.imageURL {
             imageView.kf.setImage(with: url, placeholder: UIImage(systemName: "bitcoinsign.circle"))
@@ -306,6 +348,7 @@ final class CoinDetailViewController: UIViewController {
             navigationItem.rightBarButtonItem?.isEnabled = true
             navigationItem.rightBarButtonItem?.tintColor = nil
         }
+        navigationItem.rightBarButtonItem?.accessibilityLabel = String(localized: "detail.accessibility.open_website")
 
         // Description card
         if ui.hasDescription, let text = ui.description {
@@ -318,6 +361,14 @@ final class CoinDetailViewController: UIViewController {
             descriptionCard.isHidden = true
             descriptionLabel.text = nil
         }
+        // Accessibility reading order
+        self.view.accessibilityElements = [
+            imageView,
+            nameLabel,
+            symbolLabel,
+            statsCard,
+            descriptionCard
+        ]
     }
 
     // MARK: - Actions
@@ -329,12 +380,11 @@ final class CoinDetailViewController: UIViewController {
     @objc private func toggleDescriptionExpansion() {
         isDescriptionExpanded.toggle()
         descriptionLabel.numberOfLines = isDescriptionExpanded ? 0 : 10
-        toggleDescriptionButton.setTitle(
-            isDescriptionExpanded
-              ? String(localized: "detail.description.show_less")
-              : String(localized: "detail.description.show_more"),
-            for: .normal
-        )
+        let title = isDescriptionExpanded
+            ? String(localized: "detail.description.show_less")
+            : String(localized: "detail.description.show_more")
+        toggleDescriptionButton.setTitle(title, for: .normal)
+        toggleDescriptionButton.accessibilityLabel = title
         UIView.animate(withDuration: 0.25) { self.view.layoutIfNeeded() }
     }
 
@@ -343,6 +393,12 @@ final class CoinDetailViewController: UIViewController {
     private func updateNameMarqueeIfNeeded() {
         nameMarqueeAnimator?.stopAnimation(true)
         nameMarqueeAnimator = nil
+
+        // Respect Reduce Motion: disable marquee if user prefers reduced motion
+        if UIAccessibility.isReduceMotionEnabled {
+            nameScrollView.setContentOffset(.zero, animated: false)
+            return
+        }
 
         let labelWidth = nameLabel.intrinsicContentSize.width
         let visibleWidth = nameScrollView.bounds.width
