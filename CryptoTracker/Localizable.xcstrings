@@ -12,6 +12,50 @@
         }
       }
     },
+    "detail.accessibility.logo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coin logo"
+          }
+        }
+      }
+    },
+    "detail.accessibility.open_website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open website"
+          }
+        }
+      }
+    },
+    "detail.accessibility.opens_external_browser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens in external browser"
+          }
+        }
+      }
+    },
+    "detail.accessibility.toggle_description_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to expand or collapse the description"
+          }
+        }
+      }
+    },
     "detail.change24h.title" : {
       "extractionState" : "manual",
       "localizations" : {
